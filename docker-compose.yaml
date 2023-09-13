@@ -1,0 +1,10 @@
+services:
+  pve-vm-monitor:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    environment:
+      - SHEET_ID=${SHEET_ID}

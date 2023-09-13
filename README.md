@@ -8,5 +8,5 @@ SHEET_ID="..."
 3. If required, share the google sheet with the service account email as `editor`.
 4. Launch
 ```bash
-npm start
+docker compose up -d --build
 ```
