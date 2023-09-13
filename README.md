@@ -2,6 +2,7 @@
 1. Set env vars:
 ```bash
 SHEET_ID="..."
+HOST_PORT=9000
 ```
 
 2. Get credentials file of service account, save as `creds.json`
