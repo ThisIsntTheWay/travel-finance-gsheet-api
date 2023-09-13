@@ -101,9 +101,9 @@ app.post('/sheet', async (req, res) => {
     const googleSheetsInstance = google.sheets({ version: "v4", auth: authClientObject });
 
     // Optional params
-    const optionalNotes = req.body.hasOwnProperty("notes") ? req.body.notes : ''
-    const optionalBeginning = req.body.hasOwnProperty("beginning") ? req.body.beginning : ''
-    const optionalEnd = req.body.hasOwnProperty("end") ? req.body.end : ''
+    const optionalNotes = req.body.hasOwnProperty("notes") ? req.body.notes : null
+    const optionalBeginning = req.body.hasOwnProperty("beginning") ? req.body.beginning : null
+    const optionalEnd = req.body.hasOwnProperty("end") ? req.body.end : null
 
     // Determine last empty row based on data in column A
     await googleSheetsInstance.spreadsheets.values.get(
