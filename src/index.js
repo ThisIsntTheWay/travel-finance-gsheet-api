@@ -24,6 +24,25 @@ const optionalParams = [
   "end"
 ]
 
+const expenseTypes = [
+  "🚆 Transportation",
+  "🏠 Accommodation",
+  "🍔 Food",
+  "🛒 Merchandise",
+  "🖋️ Unclassified",
+  "💸 Fees",
+  "🎁 Souvenier",
+  "🔑 Rental",
+  "💰 Top up"
+]
+
+const currencies = {
+  JPY: "¥",
+  CHF: "CHF",
+  EUR: "€",
+  USD: "$"
+}
+
 const auth = new google.auth.GoogleAuth({
   keyFile: "creds.json",
   scopes: "https://www.googleapis.com/auth/spreadsheets", 
@@ -50,7 +69,10 @@ console.log("SPREADSHEET ID:", spreadsheetId)
 
 // ------------[ ROUTES ]
 app.get('/', function(req, res) {
-  res.render('index');
+  res.render('index', {
+    expenseTypes: expenseTypes,
+    currencies: currencies
+  });
 });
 
 app.post('/sheet', async (req, res) => {
