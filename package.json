@@ -4,6 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
+    "build": "node ./src/index.js", 
     "test": "nodemon ./src/index.js"
   },
   "author": "ThisIsntTheWay",
