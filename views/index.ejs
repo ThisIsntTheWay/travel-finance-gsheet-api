@@ -11,10 +11,6 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/css/bootstrap.min.css" rel="stylesheet" crossorigin="anonymous">
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/js/bootstrap.bundle.min.js" crossorigin="anonymous"></script>
 
-    <!-- PLUGINS --> 
-    <script src="https://unpkg.com/bootstrap-datepicker@1.9.0/dist/js/bootstrap-datepicker.min.js"></script>
-    <link rel="stylesheet" href="https://unpkg.com/bootstrap-datepicker@1.9.0/dist/css/bootstrap-datepicker3.min.css">
-
     <!-- OTHER -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.4/moment.min.js"></script>
 </head>
@@ -80,16 +76,14 @@
                     <div class="form-group">
                         <label>Beginning</label>
                         <div class="input-group date">
-                            <input type="text" name="beginning" id="beginning" class="form-control">
-                            <span class="input-group-addon"><i class="glyphicon glyphicon-th"></i></span>
+                            <input type="date" name="beginning" id="beginning" class="form-control">
                         </div>
                     </div>
 
                     <div class="form-group">
                         <label>End</label>
                         <div class="input-group date">
-                            <input type="text" name="end" id="end" class="form-control">
-                            <span class="input-group-addon"><i class="glyphicon glyphicon-th"></i></span>
+                            <input type="date" name="end" id="end" class="form-control">
                         </div>
                     </div>
 
@@ -187,16 +181,6 @@
 
         // Init
         $(document).ready(function () {
-            // Datepicker
-            let datepickerOptions = {
-                format: dateFormat,
-                todayBtn: true,
-                autoclose: true,
-                todayHighlight: true
-            }
-
-            $('.input-group.date').datepicker(datepickerOptions);
-
             // POSTing
             $('#submitButton').click(async () => {
                 // Add spinner to button

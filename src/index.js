@@ -1,4 +1,5 @@
 const express = require('express')
+const moment = require('moment');
 const { google } = require("googleapis");
 const bodyParser = require('body-parser');
 
@@ -9,7 +10,6 @@ app.use(bodyParser.json())
 app.set('view engine', 'ejs')
 
 // ------------[ VARIABLES ]
-
 const requiredParams = [
   "item",
   "type",
@@ -67,6 +67,22 @@ for (i in expectedEnvVars) {
 const spreadsheetId = process.env[expectedEnvVars[0]]
 console.log("SPREADSHEET ID:", spreadsheetId)
 
+// ------------[ FUNCTIONS ]
+function formatDate(date) {
+  const dateFormats = ['YYYY-MM-DD', 'MM/DD/YYYY', 'DD.MM.YYYY', 'DD-MM-YYYY'];
+
+  let formattedDate = null;
+  for (const formatString of dateFormats) {
+    const parsedDate = moment(date, formatString, true);
+    if (parsedDate.isValid()) {
+      formattedDate = parsedDate.format('DD.MM.YYYY');
+      break;
+    }
+  }
+
+  return formattedDate;
+}
+
 // ------------[ ROUTES ]
 app.get('/', function(req, res) {
   res.render('index', {
@@ -101,9 +117,23 @@ app.post('/sheet', async (req, res) => {
     const googleSheetsInstance = google.sheets({ version: "v4", auth: authClientObject });
 
     // Optional params
-    const optionalNotes = req.body.hasOwnProperty("notes") ? req.body.notes : null
-    const optionalBeginning = req.body.hasOwnProperty("beginning") ? req.body.beginning : null
-    const optionalEnd = req.body.hasOwnProperty("end") ? req.body.end : null
+    const optionalNotes = req.body["notes"] === "" ? null : req.body.notes
+    const optionalBeginning = req.body["beginning"] === "" ? null : formatDate(req.body.beginning)
+    const optionalEnd = req.body["end"] === "" ? null : formatDate(req.body.end)
+
+    const insertingValues = [
+      req.body.item,
+      req.body.type,
+      req.body.date,
+      null,
+      optionalNotes,
+      req.body.currency,
+      req.body.amount,
+      null,
+      optionalBeginning,
+      optionalEnd
+    ]
+    console.log("Inserting values:", insertingValues)
 
     // Determine last empty row based on data in column A
     await googleSheetsInstance.spreadsheets.values.get(
@@ -128,18 +158,7 @@ app.post('/sheet', async (req, res) => {
           valueInputOption: 'USER_ENTERED',
           //insertDataOption: 'INSERT_ROWS',
           resource: {
-            values: [[
-              req.body.item,
-              req.body.type,
-              req.body.date,
-              null,
-              optionalNotes,
-              req.body.currency,
-              req.body.amount,
-              null,
-              optionalBeginning,
-              optionalEnd
-            ]]
+            values: [insertingValues]
           },
         };
   
