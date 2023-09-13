@@ -1,10 +1,19 @@
 services:
-  pve-vm-monitor:
+  backend:
     build:
       context: .
       dockerfile: Dockerfile
     restart: unless-stopped
-    ports:
-      - "${HOST_PORT}:8080"
     environment:
       - SHEET_ID=${SHEET_ID}
+  caddy:
+    build:
+      context: $PWD/caddy
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    ports:
+      - "${HOST_PORT}:443"
+    volumes:
+      - ./caddy:/etc/caddy/:ro
+    environment:
+      ACME_AGREE: 'true'
