@@ -126,6 +126,9 @@
 
         function resetNotes() {
             notes.disabled = false
+            $("#gps-info").html('')
+            $("#gps-info").attr("class", '');
+
         }
 
         // GPS thing
@@ -135,6 +138,9 @@
 
             if ($("#set-gps").is(":checked")) {
                 if ("geolocation" in navigator) {
+                    // Start spinner
+                    $("#gps-info").html('<div class="alert alert-info"><span class="spinner-border spinner-border-sm"></span>&ensp;Obtaining position...</div>')
+
                     navigator.geolocation.getCurrentPosition(function (position) {
                         const latitude = position.coords.latitude;
                         const longitude = position.coords.longitude;
@@ -160,16 +166,16 @@
         function updateGpsInfo(text, isWarning, clear) {
             const gpsInfo = $("#gps-info");
             if (clear) {
-                gpsInfo.text('');
-                gpsInfo.removeClass("alert alert-warning");
+                gpsInfo.html('');
+                gpsInfo.attr("class", '');
                 return
             }
 
-            gpsInfo.text(text);
+            gpsInfo.html(text);
             if (isWarning) {
-                gpsInfo.addClass("alert alert-warning");
+                gpsInfo.attr("class", "alert alert-danger");
             } else {
-                gpsInfo.removeClass("alert alert-warning");
+                gpsInfo.attr("class", "alert alert-success");
             }
         }
 
