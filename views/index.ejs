@@ -12,18 +12,11 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/js/bootstrap.bundle.min.js" crossorigin="anonymous"></script>
 
     <!-- PLUGINS --> 
-    <script src ="https://unpkg.com/bootstrap-datepicker@1.9.0/dist/js/bootstrap-datepicker.min.js"></script>
-    <link rel ="stylesheet" href ="https://unpkg.com/bootstrap-datepicker@1.9.0/dist/css/bootstrap-datepicker3.min.css"> 
-    
-    <script>
-        function getLocation() {
-            if (navigator.geolocation) {
-                navigator.geolocation.getCurrentPosition(showPosition);
-            } else {
-                x.innerHTML = "Geolocation is not supported by this browser.";
-            }
-        }
-    </script>
+    <script src="https://unpkg.com/bootstrap-datepicker@1.9.0/dist/js/bootstrap-datepicker.min.js"></script>
+    <link rel="stylesheet" href="https://unpkg.com/bootstrap-datepicker@1.9.0/dist/css/bootstrap-datepicker3.min.css">
+
+    <!-- OTHER -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.4/moment.min.js"></script>
 </head>
 <body>
     <nav class="navbar navbar-expand-lg navbar navbar-dark bg-primary">
@@ -58,8 +51,6 @@
                         </select>
                     </div>
 
-                    <!-- DATE MUST BE GENERATED AUTOMATICALLY -->
-
                     <div class="form-group">
                         <label>Currency</label>
                         <select class="form-select" id="currency" name="currency">
@@ -89,7 +80,7 @@
                     <div class="form-group">
                         <label>Beginning</label>
                         <div class="input-group date">
-                            <input type="text" name="beginning" class="form-control">
+                            <input type="text" name="beginning" id="beginning" class="form-control">
                             <span class="input-group-addon"><i class="glyphicon glyphicon-th"></i></span>
                         </div>
                     </div>
@@ -97,14 +88,14 @@
                     <div class="form-group">
                         <label>End</label>
                         <div class="input-group date">
-                            <input type="text" name="end" class="form-control">
+                            <input type="text" name="end" id="end" class="form-control">
                             <span class="input-group-addon"><i class="glyphicon glyphicon-th"></i></span>
                         </div>
                     </div>
 
                     <br>
                     <!-- <button type="button" class="btn btn-primary" id="submitButton">Submit</button> -->
-                    <button class="btn btn-primary btn-sm" id="submit">Submit</button>
+                    <button class="btn btn-primary btn-sm" id="submitButton">Submit</button>
                     <button type="reset" class="btn btn-secondary btn-sm" onclick="resetNotes()">Reset</button>
                 </form>
             </div>
@@ -118,7 +109,7 @@
                 <!-- Modal Header -->
                 <div class="modal-header">
                     <h4 class="modal-title">Result</h4>
-                    <button type="button" class="close" data-dismiss="modal">&times;</button>
+                    <button type="button" class="close" data-bs-dismiss="modal">&times;</button>
                 </div>
                 <!-- Modal body -->
                 <div class="modal-body">
@@ -126,7 +117,7 @@
                 </div>
                 <!-- Modal footer -->
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
                 </div>
             </div>
         </div>
@@ -151,10 +142,16 @@
             if ($("#set-gps").is(":checked")) {
                 if ("geolocation" in navigator) {
                     navigator.geolocation.getCurrentPosition(function (position) {
-                        var latitude = position.coords.latitude;
-                        var longitude = position.coords.longitude;
-                        var notes = latitude + ", " + longitude;
+                        const latitude = position.coords.latitude;
+                        const longitude = position.coords.longitude;
+                        notes = latitude + ", " + longitude;
                         updateGpsInfo(notes)
+                    }, (error) => {
+                        updateGpsInfo(error.message, true)
+
+                        // Release notes
+                        $("#notes").prop("disabled", false)
+                        notes = $("#notes").val();
                     });
                 } else {
                     updateGpsInfo("Geolocation unavailable.", true);
@@ -182,83 +179,86 @@
             }
         }
 
-        // Datepicker
-        let datepickerOptions = {
-            format: dateFormat,
-            todayBtn: true,
-            autoclose: true,
-            todayHighlight: true
-        }
+        // Disable form auto navigation
+        var form = document.getElementById('sheet-form')    
+        form.addEventListener('submit', function (event) {
+                event.preventDefault()
+        })
 
+        // Init
         $(document).ready(function () {
+            // Datepicker
+            let datepickerOptions = {
+                format: dateFormat,
+                todayBtn: true,
+                autoclose: true,
+                todayHighlight: true
+            }
+
             $('.input-group.date').datepicker(datepickerOptions);
-        })
 
-        // Form validation
-        var forms = document.querySelectorAll('.needs-validation')
-        let isValid = false
+            // POSTing
+            $('#submitButton').click(async () => {
+                // Add spinner to button
+                $('#submitButton').prop("disabled", true)
+                console.log("TRYING ADD SPINNER", this)
+                $('#submitButton').html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>')
+
+                try {
+                    console.info("Preparing to POST form...")
+
+                    if (!form.checkValidity()) {
+                        console.error("Form validation did not pass")
+                        form.classList.add('was-validated')
+                        return
+                    }
     
-        Array.prototype.slice.call(forms)
-        .forEach(function (form) {
-            form.addEventListener('submit', function (event) {
-                console.info("Validating form")
-                if (!form.checkValidity()) {
-                    event.preventDefault()
-                    event.stopPropagation()
-                    isValid = false
-                } else {
-                    isValid = true
-                }
-        
-                form.classList.add('was-validated')
-            }, false)
-        })
-
-        // POSTing
-        $(document).ready(function () {
-            $('#submit').click(function () {
-                if (!isValid) {
-                    console.error("Form submit: Validity flag not set.")
-                    return
-                }
-
-                const formData = {
-                    // Required
-                    item: $('#name').val(),
-                    type: $('#type').val(),
-                    date: $.datepicker.formatDate(dateFormat, new Date()),
-                    currency: $('#currency').val(),
-                    amount: $('#amount').val(),
-
-                    // Optionals
-                    notes: notes,
-                    beginning: $('#beginning').val(),
-                    end: $('#end').val()
-                };
-        
-                const jsonData = JSON.stringify(formData);
-                console.info("jsonData:", jsonData)
-        
-                // Send a POST request to the server
-                /*
-                fetch('/sheet', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: jsonData,
-                })
-                    .then(response => response.json())
-                    .then(data => {
-                        const resultMessage = `Response from server: ${JSON.stringify(data)}`;
-                        $('#resultMessage').html(resultMessage);
-        
-                        $('#resultModal').modal('show');
+                    const formData = {
+                        // Required
+                        item: $('#item').val(),
+                        type: $('#type').val(),
+                        date: moment().format("DD.MM.YYYY"),
+                        currency: $('#currency').val(),
+                        amount: $('#amount').val(),
+    
+                        // Optionals
+                        notes: notes,
+                        beginning: $('#beginning').val(),
+                        end: $('#end').val()
+                    };
+            
+                    const jsonData = JSON.stringify(formData);
+                    console.info("jsonData:", jsonData)
+            
+                    await fetch('/sheet', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: jsonData,
                     })
-                    .catch(error => {
-                        console.error('Error:', error);
-                    });
-                */
+                        .then(response => response.json())
+                        .then(data => {
+                            const resultMessage = `Response from server: ${JSON.stringify(data)}`;
+                            console.info(resultMessage)
+    
+                            $('#resultMessage').html(resultMessage);        
+                            $('#resultModal').modal('show');
+                        })
+                        .catch(error => {
+                            const resultMessage = `Error: ${error}`;
+                            console.error(resultMessage);
+                            
+                            $('#resultMessage').html(resultMessage);
+                            $('#resultModal').modal('show');
+                        });
+                } catch (error) {
+                    console.error("submitButton error", error)
+                } finally {
+                    // Reset submit
+                    $('#submitButton').html('Submit')
+                    $('#submitButton').prop("disabled", false)
+                }
             });
         });
     </script>
