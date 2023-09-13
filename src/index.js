@@ -85,13 +85,13 @@ app.post('/sheet', async (req, res) => {
   let missingParams = []
   for (i in requiredParams) {
     const expectedParam = requiredParams[i]
-    if (!req.body.hasOwnProperty(expectedParam)) {
+    if (!req.body.hasOwnProperty(expectedParam) | req.body[expectedParam] === "") {
       missingParams.push(expectedParam)
     }
   }
 
   if (missingParams.length > 0) {
-    res.status(400).json({ error: "Missing parameters.", missingParams })
+    res.status(400).json({ error: "Missing or empty params.", missingParams })
     return
   }
 
