@@ -1,0 +1,11 @@
+{
+    debug
+}
+travel-finance.int {
+    tls internal {
+        on_demand
+    }
+
+    # Match with docker compose service name
+    reverse_proxy http://backend:8080
+}
