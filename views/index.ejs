@@ -83,7 +83,7 @@
                         <label class="form-check-label" for="set-gps">
                             Add GPS coords
                         </label>
-                        <!-- Add GPS thing -->
+                        <p id="gps-info"></p>
                     </div>
 
                     <div class="form-group">
@@ -104,7 +104,7 @@
 
                     <br>
                     <!-- <button type="button" class="btn btn-primary" id="submitButton">Submit</button> -->
-                    <button class="btn btn-primary btn-sm" type="submit">Submit form</button>
+                    <button class="btn btn-primary btn-sm" id="submit">Submit</button>
                     <button type="reset" class="btn btn-secondary btn-sm" onclick="resetNotes()">Reset</button>
                 </form>
             </div>
@@ -134,46 +134,133 @@
 
     <!-- Supplemental scripts -->
     <script>
+        const dateFormat = "dd.mm.yyyy";
+
         var checkbox = document.getElementById("set-gps");
         var notes = document.getElementById("notes");
-
-        checkbox.addEventListener("change", function() {
-            notes.disabled = checkbox.checked
-        });
 
         function resetNotes() {
             notes.disabled = false
         }
 
-        // Enable bootstrap shit
+        // GPS thing
+        var notes = "";
+        $("#set-gps").click(function () {
+            $("#notes").prop("disabled", $("#set-gps").is(":checked"))
+
+            if ($("#set-gps").is(":checked")) {
+                if ("geolocation" in navigator) {
+                    navigator.geolocation.getCurrentPosition(function (position) {
+                        var latitude = position.coords.latitude;
+                        var longitude = position.coords.longitude;
+                        var notes = latitude + ", " + longitude;
+                        updateGpsInfo(notes)
+                    });
+                } else {
+                    updateGpsInfo("Geolocation unavailable.", true);
+                    notes = $("#notes").val();
+                }
+            } else {
+                updateGpsInfo(null, false, true) // Clear
+                notes = $("#notes").val();
+            }
+        });
+
+        function updateGpsInfo(text, isWarning, clear) {
+            const gpsInfo = $("#gps-info");
+            if (clear) {
+                gpsInfo.text('');
+                gpsInfo.removeClass("alert alert-warning");
+                return
+            }
+
+            gpsInfo.text(text);
+            if (isWarning) {
+                gpsInfo.addClass("alert alert-warning");
+            } else {
+                gpsInfo.removeClass("alert alert-warning");
+            }
+        }
+
+        // Datepicker
         let datepickerOptions = {
-            format: "dd.mm.yyyy",
+            format: dateFormat,
             todayBtn: true,
             autoclose: true,
             todayHighlight: true
         }
 
-        // ToDo: Unfuck
         $(document).ready(function () {
             $('.input-group.date').datepicker(datepickerOptions);
-            //$('.dateEnd').datepicker(datepickerOptions);
         })
 
         // Form validation
         var forms = document.querySelectorAll('.needs-validation')
+        let isValid = false
     
-        // Loop over them and prevent submission
         Array.prototype.slice.call(forms)
         .forEach(function (form) {
             form.addEventListener('submit', function (event) {
-            if (!form.checkValidity()) {
-                event.preventDefault()
-                event.stopPropagation()
-            }
-    
-            form.classList.add('was-validated')
+                console.info("Validating form")
+                if (!form.checkValidity()) {
+                    event.preventDefault()
+                    event.stopPropagation()
+                    isValid = false
+                } else {
+                    isValid = true
+                }
+        
+                form.classList.add('was-validated')
             }, false)
         })
+
+        // POSTing
+        $(document).ready(function () {
+            $('#submit').click(function () {
+                if (!isValid) {
+                    console.error("Form submit: Validity flag not set.")
+                    return
+                }
+
+                const formData = {
+                    // Required
+                    item: $('#name').val(),
+                    type: $('#type').val(),
+                    date: $.datepicker.formatDate(dateFormat, new Date()),
+                    currency: $('#currency').val(),
+                    amount: $('#amount').val(),
+
+                    // Optionals
+                    notes: notes,
+                    beginning: $('#beginning').val(),
+                    end: $('#end').val()
+                };
+        
+                const jsonData = JSON.stringify(formData);
+                console.info("jsonData:", jsonData)
+        
+                // Send a POST request to the server
+                /*
+                fetch('/sheet', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: jsonData,
+                })
+                    .then(response => response.json())
+                    .then(data => {
+                        const resultMessage = `Response from server: ${JSON.stringify(data)}`;
+                        $('#resultMessage').html(resultMessage);
+        
+                        $('#resultModal').modal('show');
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                    });
+                */
+            });
+        });
     </script>
 </body>
 </html>
