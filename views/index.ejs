@@ -30,57 +30,60 @@
             Add a new item
             </div>
             <div class="card-body">
-                <form id="sheet-form" class="needs-validation" novalidate>
+                <form id="sheet-form" class="needs-validation form-horizontal " novalidate>
 
                     <!-- ========= Required fields ========= -->
-                    <div class="form-group">
+                    <div class="form-group mb-3 validate-me">
                         <label>Item</label>
                         <input type="text" class="form-control" id="item" name="item" placeholder="Item name" required>
                     </div>
 
-                    <div class="form-group">
+                    <div class="form-group mb-3 validate-me">
                         <label>Type</label>
-                        <select class="form-select" id="type" name="type">
+                        <select class="form-select" id="type" name="type" required>
                             <% for(var i=0; i < expenseTypes.length; i++) { %>
                                 <option value='<%= expenseTypes[i] %>'><%= expenseTypes[i] %></option>
                             <% } %>
                         </select>
                     </div>
 
-                    <div class="form-group">
+                    <div class="form-group mb-3 validate-me">
                         <label>Currency</label>
-                        <select class="form-select" id="currency" name="currency">
+                        <select class="form-select" id="currency" name="currency" required>
                             <% Object.keys(currencies).forEach(function(prop) { %>
                                 <option value='<%- prop %>'><%- currencies[prop] %></option>
                             <% }); %>
                         </select>
                     </div>
 
-                    <div class="form-group">
+                    <div class="form-group mb-3 validate-me">
                         <label>Amount</label>
                         <input type="number" class="form-control" id="amount" name="amount" required>
                     </div>
 
                     <!-- ========= Optional fields ========= -->
                     <hr>
-                    <div class="form-group">
+                    <div class="form-group mb-3 validate-me">
                         <label>Notes</label>
                         <input type="text" class="form-control" id="notes" name="notes" placeholder="Notes">
-                        <input class="form-check-input" type="checkbox" value="" id="set-gps">
+                    </div>
+
+                    <div class="form-group mb-3">
+                        <input class="form-check-input" type="checkbox" id="set-gps">
                         <label class="form-check-label" for="set-gps">
                             Add GPS coords
                         </label>
                         <p style="font-style: italic;" id="gps-info"></p>
                     </div>
 
-                    <div class="form-group">
+                    <div class="form-group mb-3 validate-me">
                         <label>Beginning</label>
                         <div class="input-group date">
                             <input type="date" name="beginning" id="beginning" class="form-control">
                         </div>
                     </div>
 
-                    <div class="form-group">
+                    <div class="form-group mb-3 validate-me">
                         <label>End</label>
                         <div class="input-group date">
                             <input type="date" name="end" id="end" class="form-control">
@@ -90,7 +93,7 @@
                     <br>
                     <!-- <button type="button" class="btn btn-primary" id="submitButton">Submit</button> -->
                     <button class="btn btn-primary" id="submitButton">Submit</button>
-                    <button type="reset" class="btn btn-secondary" onclick="resetNotes()">Reset</button>
+                    <button type="reset" class="btn btn-secondary" onclick="resetForm()">Reset</button>
                     <span id="resultMessage"></span>
                 </form>
             </div>
@@ -104,43 +107,16 @@
         var checkbox = document.getElementById("set-gps");
         var notes = document.getElementById("notes");
 
-        function resetNotes() {
+        function resetForm() {
             notes.disabled = false
             $("#gps-info").html('')
             $("#gps-info").attr("class", '');
-        }
 
-        // GPS thing
-        var notes = "";
-        $("#set-gps").click(function () {
-            $("#notes").prop("disabled", $("#set-gps").is(":checked"))
-
-            if ($("#set-gps").is(":checked")) {
-                if ("geolocation" in navigator) {
-                    // Start spinner
-                    $("#gps-info").html('<div class="alert alert-info"><span class="spinner-border spinner-border-sm"></span>&ensp;Obtaining position...</div>')
-
-                    navigator.geolocation.getCurrentPosition(function (position) {
-                        const latitude = position.coords.latitude;
-                        const longitude = position.coords.longitude;
-                        notes = latitude + ", " + longitude;
-                        updateGpsInfo(notes)
-                    }, (error) => {
-                        updateGpsInfo(error.message, true)
-
-                        // Release notes
-                        $("#notes").prop("disabled", false)
-                        notes = $("#notes").val();
-                    });
-                } else {
-                    updateGpsInfo("Geolocation unavailable.", true);
-                    notes = $("#notes").val();
-                }
-            } else {
-                updateGpsInfo(null, false, true) // Clear
-                notes = $("#notes").val();
+            // Remove validations
+            for (var i = 0; i < validateGroup.length; i++) {
+                validateGroup[i].classList.remove('was-validated');
             }
-        });
+        }
 
         function updateGpsInfo(text, isWarning, clear) {
             const gpsInfo = $("#gps-info");
@@ -158,14 +134,51 @@
             }
         }
 
-        // Disable form auto navigation
-        var form = document.getElementById('sheet-form')    
-        form.addEventListener('submit', function (event) {
-                event.preventDefault()
-        })
-
-        // Init
+        // GPS thing
+        var gpsData = "";
+        
         $(document).ready(function () {
+            $("#set-gps").click(function () {
+                //$("#notes").prop("disabled", $("#set-gps").is(":checked"))
+
+                if ($("#set-gps").is(":checked")) {
+                    $('#submitButton').prop('disabled', true)
+
+                    try {
+                        if ("geolocation" in navigator) {
+                            // Start spinner
+                            $("#gps-info").html('<div class="alert alert-info"><span class="spinner-border spinner-border-sm"></span>&ensp;Obtaining position...</div>')
+        
+                            navigator.geolocation.getCurrentPosition(function (position) {
+                                const latitude = position.coords.latitude;
+                                const longitude = position.coords.longitude;
+                                gpsData = latitude + ", " + longitude;
+                                updateGpsInfo(gpsData)
+                            }, (error) => {
+                                updateGpsInfo(error.message, true)
+                            });
+                        } else {
+                            updateGpsInfo("Geolocation unavailable.", true);
+                            gpsData = null
+                        }
+                    } catch (error) {
+                        console.error("Unhandled exception:", error)
+                    } finally {
+                        $('#submitButton').attr('disabled', false)
+                    }
+                } else {
+                    updateGpsInfo(null, false, true) // Clear
+                    gpsData = null
+                }
+            });
+
+            // Disable form auto navigation
+            var form = document.getElementById('sheet-form')
+            var validateGroup = document.getElementsByClassName('validate-me');
+            form.addEventListener('submit', function (event) {
+                    event.preventDefault()
+            })
+
             // POSTing
             $('#submitButton').click(async () => {
                 // Prepare spinner and resultmessage
@@ -178,9 +191,7 @@
                     console.info("Preparing to POST form...")
 
                     if (!form.checkValidity()) {
-                        console.error("Form validation did not pass")
-                        form.classList.add('was-validated')
-                        return
+                        throw "Form validation did not pass"
                     }
     
                     const formData = {
@@ -192,9 +203,10 @@
                         amount: $('#amount').val(),
     
                         // Optionals
-                        notes: notes,
+                        notes: $('#notes').val(),
                         beginning: $('#beginning').val(),
-                        end: $('#end').val()
+                        end: $('#end').val(),
+                        location: $("#set-gps").is(":checked") ? gpsData : null
                     };
             
                     const jsonData = JSON.stringify(formData);
@@ -239,6 +251,11 @@
                     // Reset submit
                     $('#submitButton').html('Submit')
                     $('#submitButton').prop("disabled", false)
+
+                    //Added validation class to all form-groups in need of validation
+                    for (var i = 0; i < validateGroup.length; i++) {
+                        validateGroup[i].classList.add('was-validated');
+                    }
                 }
             });
         });

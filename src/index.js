@@ -21,7 +21,8 @@ const requiredParams = [
 const optionalParams = [
   "notes",
   "beginning",
-  "end"
+  "end",
+  "location"
 ]
 
 const expenseTypes = [
@@ -120,6 +121,7 @@ app.post('/sheet', async (req, res) => {
     const optionalNotes = req.body["notes"] === "" ? null : req.body.notes
     const optionalBeginning = req.body["beginning"] === "" ? null : formatDate(req.body.beginning)
     const optionalEnd = req.body["end"] === "" ? null : formatDate(req.body.end)
+    const optionalLocation = req.body["location"] === "" ? null : req.body.location
 
     const insertingValues = [
       req.body.item,
@@ -131,7 +133,11 @@ app.post('/sheet', async (req, res) => {
       req.body.amount,
       null,
       optionalBeginning,
-      optionalEnd
+      optionalEnd,
+      null,
+      null,
+      null,
+      optionalLocation
     ]
     console.log("Inserting values:", insertingValues)
 
@@ -154,7 +160,7 @@ app.post('/sheet', async (req, res) => {
         const updateRequest = {
           auth,
           spreadsheetId,
-          range: `A${lastEmptyRowIndex}:J${lastEmptyRowIndex}`,
+          range: `A${lastEmptyRowIndex}:N${lastEmptyRowIndex}`,
           valueInputOption: 'USER_ENTERED',
           //insertDataOption: 'INSERT_ROWS',
           resource: {
