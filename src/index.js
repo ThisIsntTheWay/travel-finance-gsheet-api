@@ -129,15 +129,12 @@ app.post('/sheet', async (req, res) => {
       req.body.date,
       null,
       optionalNotes,
+      optionalLocation,
       req.body.currency,
       req.body.amount,
       null,
       optionalBeginning,
       optionalEnd,
-      null,
-      null,
-      null,
-      optionalLocation
     ]
     console.log("Inserting values:", insertingValues)
 
@@ -160,7 +157,7 @@ app.post('/sheet', async (req, res) => {
         const updateRequest = {
           auth,
           spreadsheetId,
-          range: `A${lastEmptyRowIndex}:N${lastEmptyRowIndex}`,
+          range: `A${lastEmptyRowIndex}:K${lastEmptyRowIndex}`,
           valueInputOption: 'USER_ENTERED',
           //insertDataOption: 'INSERT_ROWS',
           resource: {
