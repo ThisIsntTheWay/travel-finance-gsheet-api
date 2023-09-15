@@ -69,6 +69,8 @@
                     </div>
 
                     <div class="form-group mb-3">
+                        <label>Location</label><br>
+                        <input type="text" class="form-control" id="location" name="location" placeholder="Location">
                         <input class="form-check-input" type="checkbox" id="set-gps">
                         <label class="form-check-label" for="set-gps">
                             Add GPS coords
@@ -94,7 +96,7 @@
                     <!-- <button type="button" class="btn btn-primary" id="submitButton">Submit</button> -->
                     <button class="btn btn-primary" id="submitButton">Submit</button>
                     <button type="reset" class="btn btn-secondary" onclick="resetForm()">Reset</button>
-                    <span id="resultMessage"></span>
+                    <p id="resultMessage"></p>
                 </form>
             </div>
         </div>
@@ -111,6 +113,7 @@
             notes.disabled = false
             $("#gps-info").html('')
             $("#gps-info").attr("class", '');
+            $("#location").prop("disabled", false)
 
             // Remove validations
             for (var i = 0; i < validateGroup.length; i++) {
@@ -134,14 +137,19 @@
             }
         }
 
-        // GPS thing
-        var gpsData = "";
-        
+        var locationValue = null;
+
         $(document).ready(function () {
+            // GPS stuff
             $("#set-gps").prop("checked", false)
 
+            function unlockAndGetLocationText() {
+                $("#location").prop("disabled", false)
+                return $("#location").val()
+            }
+
             $("#set-gps").click(function () {
-                //$("#notes").prop("disabled", $("#set-gps").is(":checked"))
+                $("#location").prop("disabled", $("#set-gps").is(":checked"))
 
                 if ($("#set-gps").is(":checked")) {
                     $('#submitButton').prop('disabled', true)
@@ -150,27 +158,35 @@
                         if ("geolocation" in navigator) {
                             // Start spinner
                             $("#gps-info").html('<div class="alert alert-info"><span class="spinner-border spinner-border-sm"></span>&ensp;Obtaining position...</div>')
-        
+                            locationValue = ""
+
                             navigator.geolocation.getCurrentPosition(function (position) {
                                 const latitude = position.coords.latitude;
                                 const longitude = position.coords.longitude;
-                                gpsData = latitude + ", " + longitude;
-                                updateGpsInfo(gpsData)
+                                locationValue = latitude + ", " + longitude;
+                                updateGpsInfo(locationValue)
                             }, (error) => {
+                                // Disable thing
+                                $("#set-gps").prop("checked", false)
                                 updateGpsInfo(error.message, true)
+                                locationValue = unlockAndGetLocationText()
+
                             });
                         } else {
+                            // Get location text data instead
                             updateGpsInfo("Geolocation unavailable.", true);
-                            gpsData = null
+                            locationValue = $("#location").val()
                         }
                     } catch (error) {
+                        // Get location text data instead
                         console.error("Unhandled exception:", error)
+                        $locationValue = unlockAndGetLocationText()
                     } finally {
                         $('#submitButton').attr('disabled', false)
                     }
                 } else {
                     updateGpsInfo(null, false, true) // Clear
-                    gpsData = null
+                    locationValue = unlockAndGetLocationText()
                 }
             });
 
@@ -208,7 +224,9 @@
                         notes: $('#notes').val(),
                         beginning: $('#beginning').val(),
                         end: $('#end').val(),
-                        location: $("#set-gps").is(":checked") ? gpsData : null
+
+                        // Prevent locationValue being potentially null because set-gps is not checked
+                        location: $("#set-gps").is(":checked") ? locationValue : $('#location').val()
                     };
             
                     const jsonData = JSON.stringify(formData);
